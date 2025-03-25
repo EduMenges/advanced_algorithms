@@ -15,10 +15,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
 
       - name: Install dependencies (Ubuntu)
         run: |
-          sudo apt-get install -y ninja
+          sudo apt-get install -y ninja-build
           echo "CMAKE_GENERATOR=Ninja" >> $GITHUB_ENV
 
       - name: Configure CMake
