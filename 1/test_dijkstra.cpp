@@ -161,7 +161,7 @@ int main(int argc, char *argv[]) {
     for (int32_t i_n = 0; i_n < node_values.size(); ++i_n) {
         auto n = static_cast<uint64_t>(node_values[i_n]);
         Graph graph(n);
-        uint64_t m_limit = ((n * (n - 1)) / 2) / 50;
+        uint64_t m_limit = (((n * (n - 1)) / 2) * 90) / 100;
         uint64_t prev_m = 0;
 
         for (uint64_t m = n * 2; m <= m_limit; m *= 2) {
