@@ -20,6 +20,5 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 FetchContent_MakeAvailable(mimalloc)
 
-link_libraries(mimalloc)
-
 add_subdirectory(1)
+add_subdirectory(2)
