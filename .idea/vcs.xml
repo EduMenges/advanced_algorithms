@@ -2,8 +2,6 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/build/_deps/mimalloc-src" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/cmake-build-vs/_deps/mimalloc-src" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/mimalloc" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/release/_deps/mimalloc-src" vcs="Git" />
   </component>
