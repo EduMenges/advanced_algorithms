@@ -1,13 +1,14 @@
 #pragma once
 
+#include <optional>
+#include <queue>
+#include <vector>
+
 #if __has_include(<mdspan>)
 #include <mdspan>
 #else
 #include "../util/mdspan.hpp"
 #endif
-
-#include <queue>
-#include <vector>
 
 using namespace std;
 

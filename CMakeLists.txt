@@ -20,5 +20,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 FetchContent_MakeAvailable(mimalloc)
 
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND MSVC)
+    set(OpenMP_RUNTIME_MSVC llvm)
+endif()
+
+find_package(OpenMP REQUIRED)
+
 add_subdirectory(1)
 add_subdirectory(2)

@@ -4,7 +4,7 @@
 #include <random>
 #include <vector>
 
-#include "FF_DFS.hpp"
+#include "ford_fulkerson.hpp"
 
 using namespace std;
 

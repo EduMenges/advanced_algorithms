@@ -1,11 +1,6 @@
 add_executable(dijkstra main.cpp)
 add_executable(scaling_dijkstra scaling_dijkstra.cpp)
-
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND MSVC)
-    set(OpenMP_RUNTIME_MSVC llvm)
-endif()
-
-find_package(OpenMP REQUIRED)
+target_link_libraries(scaling_dijkstra PRIVATE mimalloc)
 
 add_executable(test_dijkstra test_dijkstra.cpp)
 
