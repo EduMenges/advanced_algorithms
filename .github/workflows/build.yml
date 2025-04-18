@@ -10,7 +10,14 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        host: [ windows-latest, ubuntu-latest ]
+        include:
+          - host: windows-latest
+            cmake_config_settings: -T ClangCl
+      fail-fast: false
+    runs-on: ${{matrix.host}}
 
     steps:
       - name: Checkout repository
@@ -18,13 +25,8 @@ jobs:
         with:
           submodules: "recursive"
 
-      - name: Install dependencies (Ubuntu)
-        run: |
-          sudo apt-get install -y ninja-build
-          echo "CMAKE_GENERATOR=Ninja" >> $GITHUB_ENV
-
       - name: Configure CMake
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release ${{matrix.cmake_config_settings}}
 
       - name: Build project
         run: cmake --build build --config Release -j

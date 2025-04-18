@@ -1,4 +1,3 @@
-#include "mimalloc-new-delete.h"
 #include "dijkstra.hpp"
 #include <iostream>
 #include <sstream>
