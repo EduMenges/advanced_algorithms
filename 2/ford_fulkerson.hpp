@@ -12,18 +12,19 @@
 
 using namespace std;
 
-using capacity = int16_t;
+using capacity = int8_t;
 
-class FordFulkersonAM {
+namespace adjagency_matrix {
+class FordFulkerson {
    public:
-    FordFulkersonAM(vector<capacity> raw_graph, size_t vertices)
+    FordFulkerson(vector<capacity> raw_graph, size_t vertices)
         : raw_graph(std::move(raw_graph)),
           vertices(vertices),
           graph(this->raw_graph.data(), vertices, vertices),
           parent(vertices),
           visited(vertices, false) {}
 
-    virtual ~FordFulkersonAM() = default;
+    virtual ~FordFulkerson() = default;
 
     int64_t max_flow(uint32_t s, uint32_t t) {
         parent[s] = s;
@@ -31,7 +32,7 @@ class FordFulkersonAM {
         int64_t max_flow = 0;
 
         while (find_path(s, t)) {
-            auto path_flow = numeric_limits<capacity>::max();
+            capacity path_flow = numeric_limits<capacity>::max();
 
             uint32_t u;
 
@@ -63,10 +64,10 @@ class FordFulkersonAM {
     vector<bool> visited;
 };
 
-class FordFulkersonAMDFS final : public FordFulkersonAM {
+class FordFulkersonDFS final : public FordFulkerson {
    public:
-    FordFulkersonAMDFS(vector<capacity> raw_graph, size_t vertices)
-        : FordFulkersonAM(std::move(raw_graph), vertices) {}
+    FordFulkersonDFS(vector<capacity> raw_graph, size_t vertices)
+        : FordFulkerson(std::move(raw_graph), vertices) {}
 
     bool find_path(uint32_t s, uint32_t t) override {
         stack<uint32_t> stack;
@@ -96,10 +97,10 @@ class FordFulkersonAMDFS final : public FordFulkersonAM {
     }
 };
 
-class FordFulkersonAMBFS final : public FordFulkersonAM {
+class FordFulkersonBFS final : public FordFulkerson {
    public:
-    FordFulkersonAMBFS(vector<capacity> raw_graph, size_t vertices)
-        : FordFulkersonAM(std::move(raw_graph), vertices) {}
+    FordFulkersonBFS(vector<capacity> raw_graph, size_t vertices)
+        : FordFulkerson(std::move(raw_graph), vertices) {}
 
     bool find_path(uint32_t s, uint32_t t) override {
         queue<uint32_t> q;
@@ -128,17 +129,17 @@ class FordFulkersonAMBFS final : public FordFulkersonAM {
     }
 };
 
-class FordFulkersonAMFattestPath final : public FordFulkersonAM {
+class FordFulkersonFattestPath final : public FordFulkerson {
    public:
-    FordFulkersonAMFattestPath(vector<capacity> raw_graph, size_t vertices)
-        : FordFulkersonAM(std::move(raw_graph), vertices) {}
+    FordFulkersonFattestPath(vector<capacity> raw_graph, size_t vertices)
+        : FordFulkerson(std::move(raw_graph), vertices) {}
 
     bool find_path(uint32_t s, uint32_t t) override {
         vector<capacity> max_capacity(vertices, 0);
         max_capacity[s] = numeric_limits<capacity>::max();
 
         priority_queue<pair<capacity, uint32_t>> pq;
-        pq.push({max_capacity[s], s});
+        pq.emplace(max_capacity[s], s);
 
         while (!pq.empty()) {
             auto [cap, u] = pq.top();
@@ -155,11 +156,10 @@ class FordFulkersonAMFattestPath final : public FordFulkersonAM {
 
             for (uint32_t v = 0; v < vertices; ++v) {
                 if (!visited[v] && graph[u, v] > 0) {
-                    if (auto new_capacity = min(cap, graph[u, v]);
-                        new_capacity > max_capacity[v]) {
+                    if (auto new_capacity = min(cap, graph[u, v]); new_capacity > max_capacity[v]) {
                         max_capacity[v] = new_capacity;
                         parent[v] = u;
-                        pq.push({new_capacity, v});
+                        pq.emplace(new_capacity, v);
                     }
                 }
             }
@@ -168,3 +168,4 @@ class FordFulkersonAMFattestPath final : public FordFulkersonAM {
         return false;
     }
 };
+}

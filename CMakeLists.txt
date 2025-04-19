@@ -8,6 +8,10 @@ set(CMAKE_CXX_STANDARD 23)
 
 include(FetchContent)
 
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+    add_compile_options(-march=native)
+endif ()
+
 FetchContent_Declare(
         mimalloc
         GIT_REPOSITORY https://github.com/microsoft/mimalloc.git
@@ -22,11 +26,7 @@ FetchContent_MakeAvailable(mimalloc)
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND MSVC)
     set(OpenMP_RUNTIME_MSVC llvm)
-endif()
-
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
-    add_compile_options(-march=native)
-endif()
+endif ()
 
 find_package(OpenMP REQUIRED)
 
