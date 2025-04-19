@@ -24,6 +24,10 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND MSVC)
     set(OpenMP_RUNTIME_MSVC llvm)
 endif()
 
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+    add_compile_options(-march=native)
+endif()
+
 find_package(OpenMP REQUIRED)
 
 add_subdirectory(1)

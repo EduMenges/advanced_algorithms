@@ -1,7 +1,7 @@
 #pragma once
 
-#include <optional>
 #include <queue>
+#include <stack>
 #include <vector>
 
 #if __has_include(<mdspan>)
@@ -14,16 +14,16 @@ using namespace std;
 
 using capacity = int16_t;
 
-class FordFulkerson {
+class FordFulkersonAM {
    public:
-    FordFulkerson(vector<capacity> raw_graph, size_t vertices)
+    FordFulkersonAM(vector<capacity> raw_graph, size_t vertices)
         : raw_graph(std::move(raw_graph)),
           vertices(vertices),
           graph(this->raw_graph.data(), vertices, vertices),
           parent(vertices),
           visited(vertices, false) {}
 
-    virtual ~FordFulkerson() = default;
+    virtual ~FordFulkersonAM() = default;
 
     int64_t max_flow(uint32_t s, uint32_t t) {
         parent[s] = s;
@@ -63,10 +63,43 @@ class FordFulkerson {
     vector<bool> visited;
 };
 
-class FordFulkersonBFS final : public FordFulkerson {
+class FordFulkersonAMDFS final : public FordFulkersonAM {
    public:
-    FordFulkersonBFS(vector<capacity> raw_graph, size_t vertices)
-        : FordFulkerson(std::move(raw_graph), vertices) {}
+    FordFulkersonAMDFS(vector<capacity> raw_graph, size_t vertices)
+        : FordFulkersonAM(std::move(raw_graph), vertices) {}
+
+    bool find_path(uint32_t s, uint32_t t) override {
+        stack<uint32_t> stack;
+
+        visited[s] = true;
+
+        stack.push(s);
+
+        while (!stack.empty()) {
+            auto u = stack.top();
+            stack.pop();
+
+            if (u == t) {
+                return true;
+            }
+
+            for (uint32_t v = 0; v < vertices; ++v) {
+                if (!visited[v] && graph[u, v] > 0) {
+                    stack.push(v);
+                    parent[v] = u;
+                    visited[v] = true;
+                }
+            }
+        }
+
+        return false;
+    }
+};
+
+class FordFulkersonAMBFS final : public FordFulkersonAM {
+   public:
+    FordFulkersonAMBFS(vector<capacity> raw_graph, size_t vertices)
+        : FordFulkersonAM(std::move(raw_graph), vertices) {}
 
     bool find_path(uint32_t s, uint32_t t) override {
         queue<uint32_t> q;
@@ -95,69 +128,43 @@ class FordFulkersonBFS final : public FordFulkerson {
     }
 };
 
-class FordFulkersonDFS final : public FordFulkerson {
+class FordFulkersonAMFattestPath final : public FordFulkersonAM {
    public:
-    FordFulkersonDFS(vector<capacity> raw_graph, size_t vertices)
-        : FordFulkerson(std::move(raw_graph), vertices) {}
-
-    bool find_path(uint32_t u, uint32_t t) override {
-        if (u == t) {
-            return true;
-        }
-
-        visited[u] = true;
-
-        for (auto v = 0; v < vertices; ++v) {
-            if (!visited[v] && graph[u, v] > 0) {
-                parent[v] = u;
-
-                if (find_path(v, t)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-};
-
-class FordFulkersonFattestPath final : public FordFulkerson {
-   public:
-    FordFulkersonFattestPath(vector<capacity> raw_graph, size_t vertices)
-        : FordFulkerson(std::move(raw_graph), vertices) {}
+    FordFulkersonAMFattestPath(vector<capacity> raw_graph, size_t vertices)
+        : FordFulkersonAM(std::move(raw_graph), vertices) {}
 
     bool find_path(uint32_t s, uint32_t t) override {
         vector<capacity> max_capacity(vertices, 0);
         max_capacity[s] = numeric_limits<capacity>::max();
 
-        for (uint32_t i = 0; i < vertices; ++i) {
-            optional<uint32_t> u = nullopt;
+        priority_queue<pair<capacity, uint32_t>> pq;
+        pq.push({max_capacity[s], s});
 
-            capacity max_cap = 0;
-            for (uint32_t j = 0; j < vertices; ++j) {
-                if (!visited[j] && max_capacity[j] > max_cap) {
-                    max_cap = max_capacity[j];
-                    u = j;
-                }
+        while (!pq.empty()) {
+            auto [cap, u] = pq.top();
+            pq.pop();
+
+            if (visited[u]) {
+                continue;
             }
+            visited[u] = true;
 
-            if (!u.has_value() || *u == t) {
-                break;
+            if (u == t) {
+                return true;
             }
-
-            visited[*u] = true;
 
             for (uint32_t v = 0; v < vertices; ++v) {
-                if (!visited[v] && graph[*u, v] > 0) {
-                    if (auto new_capacity = min(max_capacity[*u], graph[*u, v]);
+                if (!visited[v] && graph[u, v] > 0) {
+                    if (auto new_capacity = min(cap, graph[u, v]);
                         new_capacity > max_capacity[v]) {
                         max_capacity[v] = new_capacity;
-                        parent[v] = *u;
+                        parent[v] = u;
+                        pq.push({new_capacity, v});
                     }
                 }
             }
         }
 
-        return max_capacity[t] > 0;
+        return false;
     }
 };
