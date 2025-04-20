@@ -37,3 +37,7 @@ build
 
 # clangd
 .cache
+
+# Profiling
+display.*.html
+test.*.er
