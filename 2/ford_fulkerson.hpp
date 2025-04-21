@@ -12,12 +12,19 @@
 
 using namespace std;
 
-using capacity = int8_t;
+using capacity = int16_t;
 
-namespace adjagency_matrix {
+namespace adjacency_matrix {
+
+void fill_graph(
+    size_t vertices,
+    mdspan<capacity, std::extents<size_t, std::dynamic_extent, std::dynamic_extent>> graph,
+    capacity max_capacity,
+    double prob);
+
 class FordFulkerson {
    public:
-    FordFulkerson(vector<capacity> raw_graph, size_t vertices)
+    constexpr FordFulkerson(vector<capacity> raw_graph, size_t vertices)
         : raw_graph(std::move(raw_graph)),
           vertices(vertices),
           graph(this->raw_graph.data(), vertices, vertices),
@@ -37,11 +44,13 @@ class FordFulkerson {
             uint32_t u;
 
             for (size_t v = t; v != s; v = parent[v]) {
+                touched_edges += 1;
                 u = parent[v];
                 path_flow = min(path_flow, graph[u, v]);
             }
 
             for (size_t v = t; v != s; v = parent[v]) {
+                touched_edges += 1;
                 u = parent[v];
                 graph[u, v] -= path_flow;
                 graph[v, u] += path_flow;
@@ -62,6 +71,8 @@ class FordFulkerson {
     mdspan<capacity, std::extents<size_t, std::dynamic_extent, std::dynamic_extent>> graph;
     vector<uint32_t> parent;
     vector<bool> visited;
+    int64_t touched_vertices = 1;
+    int64_t touched_edges = 1;
 };
 
 class FordFulkersonDFS final : public FordFulkerson {
@@ -72,9 +83,8 @@ class FordFulkersonDFS final : public FordFulkerson {
     bool find_path(uint32_t s, uint32_t t) override {
         stack<uint32_t> stack;
 
-        visited[s] = true;
-
         stack.push(s);
+        visited[s] = true;
 
         while (!stack.empty()) {
             auto u = stack.top();
@@ -85,10 +95,14 @@ class FordFulkersonDFS final : public FordFulkerson {
             }
 
             for (uint32_t v = 0; v < vertices; ++v) {
-                if (!visited[v] && graph[u, v] > 0) {
-                    stack.push(v);
-                    parent[v] = u;
-                    visited[v] = true;
+                if (!visited[v]) {
+                    touched_vertices += 1;
+                    if (graph[u, v] > 0) {
+                        touched_edges += 1;
+                        stack.push(v);
+                        parent[v] = u;
+                        visited[v] = true;
+                    }
                 }
             }
         }
@@ -117,10 +131,14 @@ class FordFulkersonBFS final : public FordFulkerson {
             }
 
             for (uint32_t v = 0; v < vertices; ++v) {
-                if (!visited[v] && graph[u, v] > 0) {
-                    q.push(v);
-                    parent[v] = u;
-                    visited[v] = true;
+                if (!visited[v]) {
+                    touched_vertices += 1;
+                    if (graph[u, v] > 0) {
+                        touched_edges += 1;
+                        q.push(v);
+                        parent[v] = u;
+                        visited[v] = true;
+                    }
                 }
             }
         }
@@ -138,16 +156,16 @@ class FordFulkersonFattestPath final : public FordFulkerson {
         vector<capacity> max_capacity(vertices, 0);
         max_capacity[s] = numeric_limits<capacity>::max();
 
-        priority_queue<pair<capacity, uint32_t>> pq;
+        auto cmp = [](const pair<capacity, uint32_t>& l,
+                      const pair<capacity, uint32_t>& r) -> bool { return r.first > l.first; };
+        priority_queue<pair<capacity, uint32_t>, vector<pair<capacity, uint32_t>>, decltype(cmp)>
+            pq(cmp);
         pq.emplace(max_capacity[s], s);
 
         while (!pq.empty()) {
             auto [cap, u] = pq.top();
             pq.pop();
 
-            if (visited[u]) {
-                continue;
-            }
             visited[u] = true;
 
             if (u == t) {
@@ -155,11 +173,17 @@ class FordFulkersonFattestPath final : public FordFulkerson {
             }
 
             for (uint32_t v = 0; v < vertices; ++v) {
-                if (!visited[v] && graph[u, v] > 0) {
-                    if (auto new_capacity = min(cap, graph[u, v]); new_capacity > max_capacity[v]) {
-                        max_capacity[v] = new_capacity;
-                        parent[v] = u;
-                        pq.emplace(new_capacity, v);
+                if (!visited[v]) {
+                    touched_vertices += 1;
+                    if (graph[u, v] > 0) {
+                        touched_edges += 1;
+
+                        if (auto new_capacity = min(cap, graph[u, v]);
+                            new_capacity > max_capacity[v]) {
+                            max_capacity[v] = new_capacity;
+                            parent[v] = u;
+                            pq.emplace(new_capacity, v);
+                        }
                     }
                 }
             }

@@ -1,2 +1,4 @@
-add_executable(assignment-2 main.cpp)
-target_link_libraries(assignment-2 mimalloc)
+add_library(ford_fulkerson ford_fulkerson.cpp)
+link_libraries(mimalloc OpenMP::OpenMP_CXX ford_fulkerson)
+add_executable(test_edges test_edges.cpp)
+add_executable(test_capacity test_capacity.cpp)

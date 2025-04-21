@@ -13,7 +13,7 @@
 
 using namespace std;
 
-void fill_edges(Graph &graph, uint32_t num_nodes, uint64_t num_edges, uint64_t current_edges) {
+void fill_edges(Graph& graph, uint32_t num_nodes, uint64_t num_edges, uint64_t current_edges) {
     const constexpr uint16_t MIN_WEIGHT = 1;
     const constexpr uint16_t MAX_WEIGHT = 1000;
 
@@ -23,7 +23,7 @@ void fill_edges(Graph &graph, uint32_t num_nodes, uint64_t num_edges, uint64_t c
     uniform_int_distribution<uint32_t> node_dist(0, num_nodes - 1);
     uniform_int_distribution<uint16_t> weight_dist(MIN_WEIGHT, MAX_WEIGHT);
 
-    for (auto &node : graph) {
+    for (auto& node : graph) {
         if (node.size() < num_edges / num_nodes) {
             node.reserve(num_edges / num_nodes - node.size());
         }
@@ -37,7 +37,7 @@ void fill_edges(Graph &graph, uint32_t num_nodes, uint64_t num_edges, uint64_t c
             auto weight = weight_dist(gen);
 
             bool exists = false;
-            for (const auto &neighbor : graph[u]) {
+            for (const auto& neighbor : graph[u]) {
                 if (neighbor.first == v) {
                     exists = true;
                     break;
@@ -55,7 +55,7 @@ void fill_edges(Graph &graph, uint32_t num_nodes, uint64_t num_edges, uint64_t c
 
 constexpr size_t DIJKSTRA_AMOUNT = 15;
 
-void run(const Graph &graph, uint32_t n, uint64_t m) {
+void run(const Graph& graph, uint32_t n, uint64_t m) {
     const constexpr size_t NODE_AMOUNT = 10;
 
     thread_local random_device rd;
@@ -81,10 +81,10 @@ void run(const Graph &graph, uint32_t n, uint64_t m) {
 
     array<pair<chrono::duration<double, std::milli>, Result>, DIJKSTRA_AMOUNT> total_results{};
 
-    constexpr array
-        kary_dijkstras = {dijkstra<2>,  dijkstra<3>,  dijkstra<4>,  dijkstra<5>,  dijkstra<6>,
-                          dijkstra<7>,  dijkstra<8>,  dijkstra<9>,  dijkstra<10>, dijkstra<11>,
-                          dijkstra<12>, dijkstra<13>, dijkstra<14>, dijkstra<15>, dijkstra<16>};
+    constexpr array kary_dijkstras = {dijkstra<2>,  dijkstra<3>,  dijkstra<4>,  dijkstra<5>,
+                                      dijkstra<6>,  dijkstra<7>,  dijkstra<8>,  dijkstra<9>,
+                                      dijkstra<10>, dijkstra<11>, dijkstra<12>, dijkstra<13>,
+                                      dijkstra<14>, dijkstra<15>, dijkstra<16>};
 
     const constexpr int RUNS = 10;
 
@@ -99,7 +99,7 @@ void run(const Graph &graph, uint32_t n, uint64_t m) {
 
                 chrono::duration<double, std::milli> elapsed = end - start;
 
-                auto &[time, current_result] = total_results[f];
+                auto& [time, current_result] = total_results[f];
 
                 time += elapsed;
                 current_result.push += result.push;
@@ -114,7 +114,7 @@ void run(const Graph &graph, uint32_t n, uint64_t m) {
     const constexpr int SAMPLE_AMOUNT = RUNS * NODE_AMOUNT;
 
     for (size_t i = 0; i < total_results.size(); ++i) {
-        auto &[time, result] = total_results[i];
+        auto& [time, result] = total_results[i];
 
         time /= SAMPLE_AMOUNT;
         result.push /= SAMPLE_AMOUNT;
@@ -134,7 +134,7 @@ void run(const Graph &graph, uint32_t n, uint64_t m) {
     synced_out << '\n';
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
     if (argc < 2) {
         cerr << "Usage: test_dijkstra <max_nodes>\n";
         return EXIT_FAILURE;
