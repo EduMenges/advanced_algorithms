@@ -13,9 +13,6 @@ jobs:
     strategy:
       matrix:
         host: [ windows-latest, ubuntu-latest ]
-        include:
-          - host: windows-latest
-            cmake_config_settings: -T ClangCl
       fail-fast: false
     runs-on: ${{matrix.host}}
 
