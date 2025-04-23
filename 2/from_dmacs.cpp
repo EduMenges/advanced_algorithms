@@ -1,3 +1,9 @@
+#include <sstream>
+#include <iostream>
+#include <cstdint>
+
+#include "ford_fulkerson.hpp"
+
 int main() {
 
     string str;
@@ -13,7 +19,7 @@ int main() {
     }
 
     size_t vertices;
-    vector<uint16_t> raw_graph;
+    vector<capacity> raw_graph;
 
     istringstream ss(str);
     string buf;
@@ -49,4 +55,7 @@ int main() {
             graph[from, to] = capacity;
         }
     }
+
+    adjacency_matrix::FordFulkersonFattestPath ff(std::move(raw_graph), vertices);
+    cout << ff.max_flow(s, t) << '\n';
 }

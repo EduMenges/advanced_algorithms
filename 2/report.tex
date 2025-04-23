@@ -1,0 +1,245 @@
+\documentclass[11pt]{article}
+\usepackage[
+inner=3cm,
+outer=2cm,
+top=3cm,
+bottom=2cm
+]{geometry}
+\usepackage[brazil]{babel}
+\usepackage{graphicx}
+\usepackage{fontspec}
+\usepackage{float}
+\setlength{\parskip}{10pt}
+\setmainfont{texgyreheros}[
+UprightFont = *-regular,
+BoldFont = *-bold,
+ItalicFont = *-italic,
+BoldItalicFont = *-bolditalic,
+Extension = .otf
+]
+
+\title{Laboratório 2 — Fluxo em redes}
+\author{Eduardo Menges Mattje}
+
+\begin{document}
+\maketitle
+
+\section{Introdução}
+
+Em teoria dos grafos, uma rede de fluxo é um grafo orientado em que cada aresta tem um valor de capacidade e recebe um fluxo, numa quantidade que não pode exceder a capacidade associada.
+
+O problema do fluxo máximo consiste em estabelecer o máximo de fluxo possível que sai de um vértice fonte s e que entra num vértice sumidouro $t$. Neste contexto, o algoritmo de Ford-Fulkerson resolve este problema ao percorrer o grafo pelos caminhos possíveis de $s$ até t, preenchendo o fluxo até a máxima capacidade permitida pelo caminho, o que ocorre enquanto existir um caminho com capacidade livre.
+
+No entanto, o algoritmo não especifica como encontrar esses caminhos, havendo 3 principais implementações:
+
+- DFS, que encontra os caminhos até $t$ via DFS (ou seja, usa uma estrutura de pilha);
+
+- BFS, que encontra os caminhos via BFS (ou seja, com uma fila);
+
+- \textit{Fattest path}, que usa uma fila de prioridade, percorrendo primeiro os caminhos cuja capacidade é maior, com um mecanismo similar ao algoritmo de Dijkstra.
+
+ Suas complexidades encontram-se na tabela abaixo.
+ 
+\begin{center}
+\begin{tabular}{c|c}
+\hline
+Implementação & Complexidade pessimista \\
+\hline 
+DFS & $O(maxFlow \cdot m)$ \\
+BFS & $O(n \cdot m^2)$ \\
+\textit{Fattest path} & $O(m \cdot \log mU)$ ou $O((n \log n + m)m \log C)$ \\
+\hline
+\end{tabular}
+\end{center}
+
+Onde $n$ é o número de vértices, $m$ é o número de arestas, $U$ é o limite superior das capacidades e $C$ é o limitante superior do fluxo máximo.
+
+\section{Plano de teste}
+
+Devido à dependência do fluxo máximo na implementação do DFS, podemos avaliar como seu tempo de execução cresce conforme esse aumenta, e como o aumento no fluxo não deve impactar o tempo nas demais implementações. Para mensurar, uma vez gerado um grafo, aumentamos a capacidade de suas arestas em cada iteração.
+
+Já no BFS, podemos avaliar seu comportamento perante o aumento no número de arestas do grafo, mantendo fixo o valor do fluxo máximo de forma a não interferir na medida do DFS. Desta forma, fixando $n$, aumentamos $m$ linearmente a partir de um valor mínimo (escolhi $n$) até o valor máximo $m \dot (m - 1)$.
+
+A implementação com \textit{fattest path} pode ser avaliada medindo ambas as métricas.
+
+\section{Detalhes de implementação}
+
+Os algoritmos foram implementados em C++. Como a diferença entre eles se dá apenas pela busca de caminho, há uma classe abstrata que implementa o método \textit{max\_flow} e deixa o método \textit{find\_path} para ser implementado pelas subclasses.
+
+O fattest path foi implementado com a \textit{priority\_queue} disponível na biblioteca padrão do C++.
+
+\section{Ambiente de teste}
+
+A máquina de teste possui Windows 11, um processador AMD Ryzen 5 7600X e 32 GB de memória RAM. O compilador utilizado foi o Clang, versão 19.1.1, com todas as otimizações padrões habilitadas.
+
+\section{Resultados}
+
+\subsection{Tempo}
+
+Para o BFS, o aumento no número de arestas provocou um aumento no tempo em execução, com uma correlação linear.
+
+\begin{figure}[H]
+	\centering
+	\caption{Tempo x arestas BFS}
+	\label{fig:edge_x_time_bfs}
+	\includegraphics[width=0.8\linewidth]{graphs/edge_x_time_bfs}
+\end{figure}
+
+Isso não aconteceu da mesma forma para o DFS nem para o \textit{fattest path}.
+
+\begin{figure}[H]
+	\centering
+	\caption{Tempo x arestas DFS}
+	\label{fig:edge_x_time_dfs}
+	\includegraphics[width=0.8\linewidth]{graphs/edge_x_time_dfs}
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\caption{Tempo x arestas Fattest path}
+	\label{fig:edge_x_time_fat}
+	\includegraphics[width=0.8\linewidth]{graphs/edge_x_time_fat}
+\end{figure}
+
+\subsection{Arestas}
+
+Um padrão similar pode ser visto quando comparamos as arestas tocadas, cujos valores além de serem mais numerosos com BFS também apresentam uma forte correlação linear positiva.
+
+\begin{figure}[H]
+	\centering
+	\caption{Arestas tocadas BFS}
+	\label{fig:edges_touched_edges_bfs}
+	\includegraphics[width=0.8\linewidth]{graphs/edges_touched_edges_bfs}
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\caption{Arestas tocadas DFS}
+	\label{fig:edges_touched_edges_dfs}
+	\includegraphics[width=0.8\linewidth]{graphs/edges_touched_edges_dfs}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\caption{Arestas tocadas Fattest path}
+	\label{fig:edges_touched_edges_fat}
+	\includegraphics[width=0.8\linewidth]{graphs/edges_touched_edges_fat}
+\end{figure}
+
+\subsection{Vértices}
+
+E para os vértices tocados.
+
+\begin{figure}[H]
+	\centering
+	\caption{Vértices tocados BFS}
+	\label{fig:vertices_touched_edges_bfs}
+	\includegraphics[width=0.8\linewidth]{graphs/vertices_touched_edges_bfs}
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\caption{Vértices tocados DFS}
+	\label{fig:vertices_touched_edges_dfs}
+	\includegraphics[width=0.8\linewidth]{graphs/vertices_touched_edges_dfs}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\caption{Vértices tocados Fattest path}
+	\label{fig:vertices_touched_edges_fat}
+	\includegraphics[width=0.8\linewidth]{graphs/vertices_touched_edges_fat}
+\end{figure}
+
+\subsection{Max flow}
+
+\subsection{Tempo}
+
+Já para o \textit{max flow}, há uma notória correlação entre o seu aumento e o aumento no tempo de execução do DFS.
+
+\begin{figure}[H]
+	\centering
+	\caption{Tempo de execução DFS}
+	\label{fig:max_flow_x_time_dfs}
+	\includegraphics[width=0.8\linewidth]{graphs/max_flow_x_time_dfs}
+\end{figure}
+
+Quanto ao \textit{fattest path}, a curva aproxima-se de uma regressão logarítmica ao invés de linear, o que é esperado, devido à complexidade pessimista considerar o $\log$ de $U$ e $C$ ao invés de uma relação linear deles.
+
+\begin{figure}[H]
+	\centering
+	\caption{Tempo de execução Fattest path}
+	\label{fig:max_flow_x_time_fat}
+	\includegraphics[width=0.8\linewidth]{graphs/max_flow_x_time_fat}
+\end{figure}
+
+Há inclusive um aumento no tempo de execução do BFS, o que não é esperado, em vista de que o número de vértices e arestas manteve-se igual durante os testes.
+
+\begin{figure}[H]
+	\centering
+	\caption{Tempo de execução BFS}
+	\label{fig:max_flow_x_time_bfs}
+	\includegraphics[width=0.8\linewidth]{graphs/max_flow_x_time_bfs}
+\end{figure}
+
+\subsection{Arestas tocadas}
+
+Um padrão parecido ocorre ao comparar as arestas tocadas conforme o \textit{max flow} aumenta: o DFS apresenta uma linha reta, com o coeficiente de Pearson próximo a 1.
+
+\begin{figure}[H]
+	\centering
+	\caption{Arestas tocadas DFS}
+	\label{fig:edges_touched_max_flow_dfs}
+	\includegraphics[width=0.8\linewidth]{graphs/edges_touched_max_flow_dfs}
+\end{figure}
+
+Já o \textit{fattest path} apresenta pouca variação, exceto pelos extremos.
+
+\begin{figure}[H]
+	\centering
+	\caption{Arestas tocadas Fattest path}
+	\label{fig:edges_touched_max_flow_fat}
+	\includegraphics[width=0.8\linewidth]{graphs/edges_touched_max_flow_fat}
+\end{figure}
+
+E o BFS, também de forma não esperada, aumenta a quantidade de arestas tocadas.
+
+\begin{figure}[H]
+	\centering
+	\caption{Arestas tocadas BFS}
+	\label{fig:edges_touched_max_flow_bfs}
+	\includegraphics[width=0.8\linewidth]{graphs/edges_touched_max_flow_bfs}
+\end{figure}
+
+\subsection{Vértices tocados}
+
+Quanto aos vértices tocados, o mesmo padrão se observa, no entanto, podemos notar um aumento ainda maior no BFS conforme o \textit{max flow} aumenta.
+
+\begin{figure}[H]
+	\centering
+	\caption{Vértices tocados DFS}
+	\label{fig:vertices_touched_max_flow_dfs}
+	\includegraphics[width=0.8\linewidth]{graphs/vertices_touched_max_flow_dfs}
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\caption{Vértices tocados Fattest path}
+	\label{fig:vertices_touched_max_flow_fat}
+	\includegraphics[width=0.8\linewidth]{graphs/vertices_touched_max_flow_fat}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\caption{Vértices tocados BFS}
+	\label{fig:vertices_touched_max_flow_bfs}
+	\includegraphics[width=0.8\linewidth]{graphs/vertices_touched_max_flow_bfs}
+\end{figure}
+
+\section{Conclusão}
+
+As três versões comportam-se como esperado. Em particular, a busca com BFS mostra-se ineficiente conforme a quantidade de arestas aumenta, devido à constante revisitância de caminhos. O DFS também se mostra ineficiente conforme o fluxo máximo aumenta, e a implementação com \textit{fattest path} mostrou-se a com melhor balanço de aumento de fluxo e aumento de arestas, respeitando os limites logarítmicos, apesar de necessitar de uma estrutura mais complexa.
+
+Estranhamente, o BFS também mostrou um aumento de operações conforme o fluxo máximo aumentou, o que não é esperado, em vista de que o número de vértices e de arestas era constante. Talvez a maior capacidade abriu mais caminhos por onde o fluxo poderia passar, assim também aumentando as operações necessárias até encontrar a saturação.
+
+\end{document}

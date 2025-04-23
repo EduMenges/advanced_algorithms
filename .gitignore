@@ -41,3 +41,8 @@ build
 # Profiling
 display.*.html
 test.*.er
+
+# LaTeX
+*.aux
+*.log
+*.pdf
