@@ -16,11 +16,14 @@ using capacity = int16_t;
 
 namespace adjacency_matrix {
 
-void fill_graph(
-    size_t vertices,
-    mdspan<capacity, std::extents<size_t, std::dynamic_extent, std::dynamic_extent>> graph,
-    capacity max_capacity,
-    double prob);
+using Graph = mdspan<capacity, std::extents<size_t, std::dynamic_extent, std::dynamic_extent>>;
+
+void fill_graph(size_t vertices, Graph graph, capacity max_capacity, double prob);
+
+void fill_graph_with_fixed_max_flow(size_t vertices,
+                                    Graph graph,
+                                    capacity max_capacity,
+                                    double prob);
 
 class FordFulkerson {
    public:
@@ -68,11 +71,11 @@ class FordFulkerson {
 
     vector<capacity> raw_graph;
     size_t vertices;
-    mdspan<capacity, std::extents<size_t, std::dynamic_extent, std::dynamic_extent>> graph;
+    Graph graph;
     vector<uint32_t> parent;
-    vector<bool> visited;
-    int64_t touched_vertices = 1;
-    int64_t touched_edges = 1;
+    vector<uint8_t> visited;
+    uint64_t touched_vertices = 1;
+    uint64_t touched_edges = 1;
 };
 
 class FordFulkersonDFS final : public FordFulkerson {

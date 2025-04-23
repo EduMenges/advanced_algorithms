@@ -12,6 +12,14 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     add_compile_options(-march=native)
 endif ()
 
+if (MSVC)
+    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        set(OpenMP_RUNTIME_MSVC llvm)
+    else ()
+        add_compile_options(/arch:AVX512)
+    endif ()
+endif ()
+
 FetchContent_Declare(
         mimalloc
         GIT_REPOSITORY https://github.com/microsoft/mimalloc.git
@@ -23,10 +31,6 @@ add_compile_definitions(MI_OVERRIDE=ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 FetchContent_MakeAvailable(mimalloc)
-
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND MSVC)
-    set(OpenMP_RUNTIME_MSVC llvm)
-endif ()
 
 find_package(OpenMP REQUIRED)
 

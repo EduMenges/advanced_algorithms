@@ -2,10 +2,10 @@
 #include <random>
 
 void adjacency_matrix::fill_graph(
-size_t vertices,
-mdspan<capacity, std::extents<size_t, std::dynamic_extent, std::dynamic_extent>> graph,
-capacity max_capacity,
-double prob) {
+    size_t vertices,
+    mdspan<capacity, std::extents<size_t, std::dynamic_extent, std::dynamic_extent>> graph,
+    capacity max_capacity,
+    double prob) {
     thread_local mt19937_64 rng(0);
 
     uniform_int_distribution<capacity> capacity_dist(1, max_capacity);
