@@ -26,6 +26,7 @@ int main() {
     getline(ss, buf, ' ');
     getline(ss, buf, ' ');
     ss >> vertices;
+    vertices += 1;
     raw_graph.resize(vertices * vertices);
     mdspan graph(raw_graph.data(), vertices, vertices);
 
