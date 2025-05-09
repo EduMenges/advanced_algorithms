@@ -1,0 +1,2 @@
+add_executable(generate_tournament generate_tournament.cpp)
+add_executable(tournament tournament.cpp)
