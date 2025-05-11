@@ -13,7 +13,6 @@
 #include <iostream>
 #include <limits>
 #include <queue>
-#include <tuple>
 #include <vector>
 
 using namespace std;
@@ -21,18 +20,23 @@ using namespace std;
 constexpr int32_t INF = numeric_limits<int32_t>::max();
 
 struct Edge {
-    int to;            // Destination node of the edge
-    int capacity;      // Maximum capacity of the edge
-    int flow;          // Current flow through the edge
-    int reverse_edge;  // Index of the reverse edge in the 'to' node's adjacency list
+    uint32_t to;            // Destination node of the edge
+    uint32_t reverse_edge;  // Index of the reverse edge in the 'to' node's adjacency list
+    int capacity;           // Maximum capacity of the edge
+    int flow;               // Current flow through the edge
 };
 
-void add_edge(vector<vector<Edge>>& adj, int u, int v, int capacity) {
-    adj[u].emplace_back(v, capacity, 0, (int)adj[v].size());
-    adj[v].emplace_back(u, 0, 0, (int)adj[u].size() - 1);
+namespace {
+constexpr void add_edge(vector<vector<Edge>>& adj, uint32_t u, uint32_t v, int capacity) {
+    adj[u].emplace_back(v, adj[v].size(), capacity, 0);
+    adj[v].emplace_back(u, adj[u].size() - 1, 0, 0);
 }
 
-int bfs(int s, int t, span<int> parent_node, span<int> parent_edge_index, span<vector<Edge>> adj) {
+int bfs(uint32_t s,
+        uint32_t t,
+        span<int32_t> parent_node,
+        span<uint32_t> parent_edge_index,
+        span<vector<Edge>> adj) {
     fill(parent_node.begin(), parent_node.end(), -1);
     queue<pair<int, int>> q;
     q.emplace(s, INF);
@@ -46,7 +50,7 @@ int bfs(int s, int t, span<int> parent_node, span<int> parent_edge_index, span<v
             const Edge& edge = adj[u][i];
             int v = edge.to;
 
-            if (parent_node[v] == -1 && edge.capacity - edge.flow > 0) {
+            if (parent_node[v] < 0 && edge.capacity - edge.flow > 0) {
                 parent_node[v] = u;
                 parent_edge_index[v] = i;
                 int new_flow = min(f, edge.capacity - edge.flow);
@@ -60,9 +64,9 @@ int bfs(int s, int t, span<int> parent_node, span<int> parent_edge_index, span<v
     return 0;
 }
 
-int64_t maxflow(int s, int t, size_t n, span<vector<Edge>> adj) {
-    vector<int> parent_node(n);
-    vector<int> parent_edge_index(n);
+int64_t maxflow(uint32_t s, uint32_t t, size_t n, span<vector<Edge>> adj) {
+    vector<int32_t> parent_node(n);
+    vector<uint32_t> parent_edge_index(n);
 
     int64_t total_flow = 0;
     int64_t new_flow;
@@ -88,10 +92,11 @@ int64_t maxflow(int s, int t, size_t n, span<vector<Edge>> adj) {
 
     return total_flow;
 }
+}
 
 int main() {
     ios_base::sync_with_stdio(false);
-    cin.tie(NULL);
+    cin.tie(nullptr);
 
     size_t n;
     cin >> n;
@@ -129,8 +134,7 @@ int main() {
 
     for (size_t i = 2; i <= n; ++i) {
         limits[i] = max_possible_victories_team_1 - wins[i] - 1;
-        auto already_lost = limits[i] < 0;
-        if (already_lost) {
+        if (auto already_lost = limits[i] < 0; already_lost) {
             cout << "false\n";
             return EXIT_SUCCESS;
         }
@@ -199,5 +203,5 @@ int main() {
         cout << "false\n";
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }
