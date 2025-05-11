@@ -9,10 +9,9 @@
 #endif
 
 #include <algorithm>
-#include <cstring>
 #include <iostream>
 #include <limits>
-#include <queue>
+#include <stack>
 #include <vector>
 
 using namespace std;
@@ -32,31 +31,41 @@ constexpr void add_edge(vector<vector<Edge>>& adj, uint32_t u, uint32_t v, int c
     adj[v].emplace_back(u, adj[u].size() - 1, 0, 0);
 }
 
-int bfs(uint32_t s,
+int dfs(uint32_t s,
         uint32_t t,
         span<int32_t> parent_node,
         span<uint32_t> parent_edge_index,
         span<vector<Edge>> adj) {
     fill(parent_node.begin(), parent_node.end(), -1);
-    queue<pair<int, int>> q;
-    q.emplace(s, INF);
-    parent_node[s] = s;
+    parent_node[s] = static_cast<int32_t>(s);
 
-    while (!q.empty()) {
-        auto [u, f] = q.front();
-        q.pop();
+    std::stack<uint32_t> st;
+    st.push(s);
+
+    while (!st.empty()) {
+        uint32_t u = st.top();
+        st.pop();
 
         for (size_t i = 0; i < adj[u].size(); ++i) {
             const Edge& edge = adj[u][i];
-            int v = edge.to;
+            auto v = edge.to;
 
             if (parent_node[v] < 0 && edge.capacity - edge.flow > 0) {
-                parent_node[v] = u;
-                parent_edge_index[v] = i;
-                int new_flow = min(f, edge.capacity - edge.flow);
-                if (v == t)
-                    return new_flow;
-                q.push({v, new_flow});
+                parent_node[v] = static_cast<int32_t>(u);
+                parent_edge_index[v] = static_cast<uint32_t>(i);
+
+                // Reached sink – back-track once to get the bottleneck
+                if (v == t) {
+                    int bottleneck = INF;
+                    for (int cur = static_cast<int>(t); cur != static_cast<int>(s);
+                         cur = parent_node[cur]) {
+                        const Edge& pe = adj[parent_node[cur]][parent_edge_index[cur]];
+                        bottleneck = std::min(bottleneck, pe.capacity - pe.flow);
+                    }
+                    return bottleneck;
+                }
+
+                st.push(v);
             }
         }
     }
@@ -69,29 +78,25 @@ int64_t maxflow(uint32_t s, uint32_t t, size_t n, span<vector<Edge>> adj) {
     vector<uint32_t> parent_edge_index(n);
 
     int64_t total_flow = 0;
-    int64_t new_flow;
+    int64_t aug;
 
-    while ((new_flow = bfs(s, t, parent_node, parent_edge_index, adj))) {
-        total_flow += new_flow;
+    while ((aug = dfs(s, t, parent_node, parent_edge_index, adj))) {
+        total_flow += aug;
 
-        int cur = t;
-        while (cur != s) {
+        for (auto cur = t; cur != s; cur = parent_node[cur]) {
             int prev = parent_node[cur];
-            int edge_idx = parent_edge_index[cur];
+            auto edge_idx = parent_edge_index[cur];
 
-            Edge& forward_edge = adj[prev][edge_idx];
-            forward_edge.flow += new_flow;
+            Edge& fwd = adj[prev][edge_idx];
+            fwd.flow += aug;
 
-            int reverse_edge_idx = forward_edge.reverse_edge;
-            Edge& reverse_edge = adj[cur][reverse_edge_idx];
-            reverse_edge.flow -= new_flow;
-
-            cur = prev;
+            Edge& rev = adj[cur][fwd.reverse_edge];
+            rev.flow -= aug;
         }
     }
-
     return total_flow;
 }
+
 }
 
 int main() {
