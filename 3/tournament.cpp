@@ -1,3 +1,7 @@
+#if __has_include(<mimalloc-new-delete.h>)
+#include <mimalloc-new-delete.h>
+#endif
+
 #if __has_include(<mdspan>)
 #include <mdspan>
 #else
@@ -7,51 +11,77 @@
 #include <algorithm>
 #include <cstring>
 #include <iostream>
+#include <limits>
 #include <queue>
+#include <tuple>
 #include <vector>
+
 using namespace std;
 
 constexpr int32_t INF = numeric_limits<int32_t>::max();
 
-int maxflow(int s, int t, int n, mdspan<int32_t, dextents<size_t, 2>> cap, span<vector<int>> adj) {
-    int total_flow = 0;
-    vector<int> raw_flow(n * n);
-    mdspan flow(raw_flow.data(), n, n);
-    vector<int> parent(n);
+struct Edge {
+    int to;            // Destination node of the edge
+    int capacity;      // Maximum capacity of the edge
+    int flow;          // Current flow through the edge
+    int reverse_edge;  // Index of the reverse edge in the 'to' node's adjacency list
+};
 
-    auto bfs = [&] {
-        fill(parent.begin(), parent.end(), -1);
-        parent[s] = s;
-        queue<pair<int, int>> q;
-        q.push({s, INF});
+void add_edge(vector<vector<Edge>>& adj, int u, int v, int capacity) {
+    adj[u].emplace_back(v, capacity, 0, (int)adj[v].size());
+    adj[v].emplace_back(u, 0, 0, (int)adj[u].size() - 1);
+}
 
-        while (!q.empty()) {
-            int u = q.front().first;
-            int f = q.front().second;
-            q.pop();
+int bfs(int s, int t, span<int> parent_node, span<int> parent_edge_index, span<vector<Edge>> adj) {
+    fill(parent_node.begin(), parent_node.end(), -1);
+    queue<pair<int, int>> q;
+    q.emplace(s, INF);
+    parent_node[s] = s;
 
-            for (int v : adj[u]) {
-                if (parent[v] == -1 && cap[u, v] - flow[u, v] > 0) {
-                    parent[v] = u;
-                    int new_flow = min(f, cap[u, v] - flow[u, v]);
-                    if (v == t)
-                        return new_flow;
-                    q.push({v, new_flow});
-                }
+    while (!q.empty()) {
+        auto [u, f] = q.front();
+        q.pop();
+
+        for (size_t i = 0; i < adj[u].size(); ++i) {
+            const Edge& edge = adj[u][i];
+            int v = edge.to;
+
+            if (parent_node[v] == -1 && edge.capacity - edge.flow > 0) {
+                parent_node[v] = u;
+                parent_edge_index[v] = i;
+                int new_flow = min(f, edge.capacity - edge.flow);
+                if (v == t)
+                    return new_flow;
+                q.push({v, new_flow});
             }
         }
+    }
 
-        return 0;
-    };
+    return 0;
+}
 
-    int new_flow;
-    while ((new_flow = bfs())) {
+int64_t maxflow(int s, int t, size_t n, span<vector<Edge>> adj) {
+    vector<int> parent_node(n);
+    vector<int> parent_edge_index(n);
+
+    int64_t total_flow = 0;
+    int64_t new_flow;
+
+    while ((new_flow = bfs(s, t, parent_node, parent_edge_index, adj))) {
         total_flow += new_flow;
+
         int cur = t;
         while (cur != s) {
-            int prev = parent[cur];
-            flow[prev, cur] += new_flow;
-            flow[cur, prev] -= new_flow;
+            int prev = parent_node[cur];
+            int edge_idx = parent_edge_index[cur];
+
+            Edge& forward_edge = adj[prev][edge_idx];
+            forward_edge.flow += new_flow;
+
+            int reverse_edge_idx = forward_edge.reverse_edge;
+            Edge& reverse_edge = adj[cur][reverse_edge_idx];
+            reverse_edge.flow -= new_flow;
+
             cur = prev;
         }
     }
@@ -74,7 +104,7 @@ int main() {
 
     vector<uint32_t> raw_games((n + 1) * (n + 1));
     mdspan games(raw_games.data(), n + 1, n + 1);
-    uint64_t total_games = 0;
+    uint64_t total_games_excluding_team_1 = 0;
 
     for (size_t i = 1; i <= n; ++i) {
         for (size_t j = i + 1; j <= n; ++j) {
@@ -83,22 +113,22 @@ int main() {
             games[i, j] = g;
             games[j, i] = g;
             if (i != 1) [[likely]] {
-                total_games += g;
+                total_games_excluding_team_1 += g;
             }
         }
     }
 
-    uint64_t remaining_games = 0;
+    uint64_t remaining_games_team_1 = 0;
     for (size_t j = 2; j <= n; ++j) {
-        remaining_games += games[1, j];
+        remaining_games_team_1 += games[1, j];
     }
 
-    auto max_possible_victories = wins[1] + remaining_games;
+    auto max_possible_victories_team_1 = wins[1] + remaining_games_team_1;
 
     vector<int32_t> limits(n + 1);
 
     for (size_t i = 2; i <= n; ++i) {
-        limits[i] = max_possible_victories - wins[i] - 1;
+        limits[i] = max_possible_victories_team_1 - wins[i] - 1;
         auto already_lost = limits[i] < 0;
         if (already_lost) {
             cout << "false\n";
@@ -111,12 +141,11 @@ int main() {
 
     size_t game_nodes_start = s + 1;
 
-    size_t game_node = game_nodes_start;
+    // Pairs of teams excluding team 1
+    size_t num_game_nodes = (n - 1) * (n - 2) / 2;
 
-    size_t game_nodes_end = game_nodes_start + (n - 1) * (n - 2) / 2;
-
-    // Where the teams-related nodes start
-    size_t team_node_start = game_nodes_end;
+    // Where the teams-related nodes start (teams 2 to n)
+    size_t team_node_start = game_nodes_start + num_game_nodes;
 
     // Sink
     size_t t = team_node_start + n - 1;
@@ -124,49 +153,47 @@ int main() {
     // Total amount of nodes in the graph
     size_t node_count = t + 1;
 
-    vector<int32_t> raw_cap(node_count * node_count);
-    mdspan cap(raw_cap.data(), node_count, node_count);
+    // Adjacency list to store the graph
+    vector<vector<Edge>> adj(node_count);
 
-    vector<vector<int32_t>> adj(node_count);
+    size_t current_game_node = game_nodes_start;
 
-    // Creating game nodes
+    // Creating game nodes and edges from source to game nodes and game nodes to team nodes
     for (size_t i = 2; i <= n; ++i) {
         for (size_t j = i + 1; j <= n; ++j) {
             int gij = games[i, j];
             if (gij == 0)
                 continue;
 
-            auto g_idx = game_node++;
+            auto g_idx = current_game_node++;
 
-            // s -> game
-            cap[s, g_idx] = gij;
-            adj[s].push_back(g_idx);
-            adj[g_idx].push_back(s);
+            // Add edge from source to game node with capacity equal to the number of games between
+            // i and j
+            add_edge(adj, s, g_idx, gij);
 
-            // game -> team i
+            // Add edge from game node to team i with infinite capacity
             auto tid_i = team_node_start + (i - 2);
-            cap[g_idx, tid_i] = INF;
-            adj[g_idx].push_back(tid_i);
-            adj[tid_i].push_back(g_idx);
+            add_edge(adj, g_idx, tid_i, INF);
 
-            // game -> team j
+            // Add edge from game node to team j with infinite capacity
             auto tid_j = team_node_start + (j - 2);
-            cap[g_idx, tid_j] = INF;
-            adj[g_idx].push_back(tid_j);
-            adj[tid_j].push_back(g_idx);
+            add_edge(adj, g_idx, tid_j, INF);
         }
     }
 
-    // team i -> t
+    // Add edges from team nodes to the sink with capacity equal to the remaining allowed losses for
+    // each team
     for (size_t i = 2; i <= n; ++i) {
         auto tid = team_node_start + (i - 2);
-        cap[tid, t] = limits[i];
-        adj[tid].push_back(t);
-        adj[t].push_back(tid);
+        add_edge(adj, tid, t, limits[i]);
     }
 
-    int result = maxflow(s, t, node_count, cap, adj);
-    if (result == total_games) {
+    // Calculate the max flow from source to sink
+    int result = maxflow(s, t, node_count, adj);
+
+    // If the max flow equals the total number of games played between teams 2 to n,
+    // it means all these games can be allocated without any team exceeding their victory limit
+    if (result == total_games_excluding_team_1) {
         cout << "true\n";
     } else {
         cout << "false\n";
