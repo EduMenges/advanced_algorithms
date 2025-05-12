@@ -1,0 +1,105 @@
+\documentclass[11pt]{article}
+\usepackage[
+    inner=3cm,
+    outer=2cm,
+    top=3cm,
+    bottom=2cm
+]{geometry}
+\usepackage[brazil]{babel}
+\usepackage{graphicx}
+\usepackage{fontspec}
+\usepackage{float}
+\setlength{\parskip}{10pt}
+\setmainfont{texgyreheros}[
+    UprightFont = *-regular,
+    BoldFont = *-bold,
+    ItalicFont = *-italic,
+    BoldItalicFont = *-bolditalic,
+    Extension = .otf
+]
+
+\title{Laboratório 3 — Problema dos torneios}
+\author{Eduardo Menges Mattje}
+
+\begin{document}
+\maketitle
+
+\section{Introdução}
+
+O problema dos torneios em determinar se a primeira equipe poderá ganhar um torneio, sabendo os jogos seguintes entre todas as equipes e a quantidade de jogos já ganhos.
+
+Esse problema pode ser reduzido para um fluxo máximo.
+
+Dado $w_1$ o número de jogos já ganhos pela equipe $1$, $r_1$ o número de partidas restantes da equipe $1$, sabemos que a equipe $1$ vencerá no máximo $w_1 + r_1$ jogos.
+Dessa forma, precisamos que o resto das equipes $i \in [2, n]$ ganhe no máximo $m_i = (w_1 + r_1) - w_i - 1$ vezes (excluindo os empates).
+
+Para a montagem do grafo $G$, teremos um nó fonte $s$ e um nó sumidouro $t$.
+Cada jogo também ganhará um nó, conectado à $s$ com peso $g(i,j)$, e às respectivas equipes $i$ e $j$ com capacidade infinita.
+As equipes, por sua vez, se conectam ao sumidouro $t$ com capacidade $w_1$.
+E equipe $1$ pode vencer se há um fluxo máximo saturado.
+
+\section{Plano de teste}
+
+O gerador de testes disponibilizado pelo professor permite a manipulação:
+
+\begin{itemize}
+	\item da quantidade de equipes;
+    \item da quantidade máxima de jogos entre as equipes;
+    \item da distribuição de jogos que já foram jogados;
+    \item do viés de vencimento da equipe 1.
+\end{itemize}
+
+O que será avaliado será:
+
+\begin{enumerate}
+	\item o tempo de execução em função da quantidade de equipes;
+	\item a probabilidade de a equipe $1$ vencer em função do viés e dos jogos já vencidos.
+\end{enumerate}
+
+Assim, os casos foram para 1 gerados no intervalo $[500, 5000]$, incrementando $500$ equipes a cada iteração, mantendo os demais parâmetros com os padrões do gerador.
+
+Já os casos para 2 foram gerados fixando a quantidade de equipes em $250$, a quantidade máxima de jogos em $3$ e os jogos já jogados variando de $0.0$ a $1.0$, com incrementos de $0.1$, o viés da equipe $1$ variando de $-1.0$ a $1.0$ incrementando $0.1$ por iteração. $15$ casos de teste foram gerados por configuração.
+
+\section{Detalhes de implementação}
+
+A implementação do max flow utilizada foi a proposta por Dinic, em vista de que testes experimentais mostraram demasiada demora no tempo execução com as implementações Ford-Fulkerson e Edmonds-Karp. A implementação de Dinic possui complexidade $O(V^2E)$.
+
+Devido à grande quantidade de nós e esparsidade de arestas, a representação de grafos escolhida foi a de lista de adjacência.
+
+\section{Ambiente de teste}
+
+A máquina de teste possui Windows 11, um processador AMD Ryzen 5 7600X e 32 GB de memória RAM. O compilador utilizado foi o Clang, versão 19.1.1, com todas as otimizações padrões habilitadas.
+
+\section{Resultados}
+
+\subsection{Tempo}
+
+Podemos observar que o tempo de execução toma uma forma polinomial em relação à quantidade de equipes.
+
+\begin{figure}[H]
+	\centering
+	\caption{Tempo de execução em função da quantidade de equipes}
+	\label{fig:teams}
+	\includegraphics[width=0.8\linewidth]{graphs/teams}
+\end{figure}
+
+Isso é condizente com a complexidade da implementação de Dinic, pois sua complexidade $O(V^2E)$ implica aumento quadrático no tempo conforme a quantidade de vértices cresce, e como há um vértice para cada possível jogo entre as equipes e essa quantidade cresce de forma quadrática ($vertices = \frac{(n - 1) \cdot (n - 2)}{2}$), o tempo aumenta numa relação polinomial de grau 4.
+
+\subsection{Bias e taxa de vencimento}
+
+Em vista de testarmos 2 variáveis, escolheu-se representar os dados com um \textit{heatmap}.
+
+\begin{figure}[H]
+    \centering
+    \caption{Probabilidade de vencimento em função do viés e jogos já vencidos}
+    \label{fig:bias_wins}
+    \includegraphics[width=0.8\linewidth]{graphs/heatmap}
+\end{figure}
+
+Podemos observar que, mesmo em cenários sem viés ou com viés contra a equipe 1, ela ainda é capaz de ganhar, desde que haja uma quantidade suficiente de jogos ainda não jogados.
+
+\section{Conclusão}
+
+Através da redução proposta, foi possível resolver o problema dos torneios, com uma complexidade de acordo com o algoritmo de Dinic usado como a implementação do fluxo máximo.
+
+\end{document}

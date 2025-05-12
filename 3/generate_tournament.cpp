@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
     uniform_real_distribution<> dist(0.0, 1.0);
 
     for (size_t j = 1; j < teams; ++j) {
-        p[0, j] = min(1.0, dist(gen) + bias);
+        p[0, j] = max(min(1.0, dist(gen) + bias), 0.0);
     }
 
     for (size_t i = 1; i < teams; ++i) {

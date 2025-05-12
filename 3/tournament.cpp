@@ -11,7 +11,7 @@
 #include <algorithm>
 #include <iostream>
 #include <limits>
-#include <stack>
+#include <queue>
 #include <vector>
 
 using namespace std;
@@ -27,73 +27,73 @@ struct Edge {
 
 namespace {
 constexpr void add_edge(vector<vector<Edge>>& adj, uint32_t u, uint32_t v, int capacity) {
-    adj[u].emplace_back(v, adj[v].size(), capacity, 0);
-    adj[v].emplace_back(u, adj[u].size() - 1, 0, 0);
+    adj[u].emplace_back(v, static_cast<uint32_t>(adj[v].size()), capacity, 0);
+    adj[v].emplace_back(u, static_cast<uint32_t>(adj[u].size()) - 1, 0, 0);
 }
 
-int dfs(uint32_t s,
-        uint32_t t,
-        span<int32_t> parent_node,
-        span<uint32_t> parent_edge_index,
-        span<vector<Edge>> adj) {
-    fill(parent_node.begin(), parent_node.end(), -1);
-    parent_node[s] = static_cast<int32_t>(s);
+bool bfs(uint32_t s, uint32_t t, vector<int>& level, span<vector<Edge>> adj) {
+    fill(level.begin(), level.end(), -1);
+    level[s] = 0;
 
-    std::stack<uint32_t> st;
-    st.push(s);
+    queue<uint32_t> q;
+    q.push(s);
 
-    while (!st.empty()) {
-        uint32_t u = st.top();
-        st.pop();
+    while (!q.empty()) {
+        uint32_t u = q.front();
+        q.pop();
 
-        for (size_t i = 0; i < adj[u].size(); ++i) {
-            const Edge& edge = adj[u][i];
-            auto v = edge.to;
-
-            if (parent_node[v] < 0 && edge.capacity - edge.flow > 0) {
-                parent_node[v] = static_cast<int32_t>(u);
-                parent_edge_index[v] = static_cast<uint32_t>(i);
-
-                // Reached sink – back-track once to get the bottleneck
-                if (v == t) {
-                    int bottleneck = INF;
-                    for (int cur = static_cast<int>(t); cur != static_cast<int>(s);
-                         cur = parent_node[cur]) {
-                        const Edge& pe = adj[parent_node[cur]][parent_edge_index[cur]];
-                        bottleneck = std::min(bottleneck, pe.capacity - pe.flow);
-                    }
-                    return bottleneck;
-                }
-
-                st.push(v);
+        for (const auto& edge : adj[u]) {
+            if (level[edge.to] < 0 && edge.capacity - edge.flow > 0) {
+                level[edge.to] = level[u] + 1;
+                q.push(edge.to);
             }
         }
     }
 
+    return level[t] >= 0;
+}
+
+// DFS for finding blocking flow
+int dfs(uint32_t u,
+        uint32_t t,
+        int flow,
+        span<size_t> ptr,
+        const vector<int>& level,
+        span<vector<Edge>> adj) {
+    if (u == t || flow == 0) {
+        return flow;
+    }
+
+    for (; ptr[u] < adj[u].size(); ++ptr[u]) {
+        Edge& edge = adj[u][ptr[u]];
+        if (level[edge.to] == level[u] + 1 && edge.capacity - edge.flow > 0) {
+            int pushed = dfs(edge.to, t, min(flow, edge.capacity - edge.flow), ptr, level, adj);
+            if (pushed > 0) {
+                edge.flow += pushed;
+                adj[edge.to][edge.reverse_edge].flow -= pushed;
+                return pushed;
+            }
+        }
+    }
     return 0;
 }
 
 int64_t maxflow(uint32_t s, uint32_t t, size_t n, span<vector<Edge>> adj) {
-    vector<int32_t> parent_node(n);
-    vector<uint32_t> parent_edge_index(n);
+    vector<int32_t> level(n);
+    vector<size_t> ptr(n);
 
     int64_t total_flow = 0;
-    int64_t aug;
 
-    while ((aug = dfs(s, t, parent_node, parent_edge_index, adj))) {
-        total_flow += aug;
+    // Continue while there is a path in the level graph
+    while (bfs(s, t, level, adj)) {
+        fill(ptr.begin(), ptr.end(), 0);
 
-        for (auto cur = t; cur != s; cur = parent_node[cur]) {
-            int prev = parent_node[cur];
-            auto edge_idx = parent_edge_index[cur];
-
-            Edge& fwd = adj[prev][edge_idx];
-            fwd.flow += aug;
-
-            Edge& rev = adj[cur][fwd.reverse_edge];
-            rev.flow -= aug;
+        // Find blocking flows
+        while (auto flow = dfs(s, t, INF, ptr, level, adj)) {
+            total_flow += flow;
         }
     }
+
     return total_flow;
 }
 
