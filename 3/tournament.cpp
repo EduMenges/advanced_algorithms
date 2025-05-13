@@ -16,17 +16,18 @@
 
 using namespace std;
 
-constexpr int32_t INF = numeric_limits<int32_t>::max();
+using capacity_t = int32_t;
+constexpr int32_t INF = numeric_limits<capacity_t>::max();
 
 struct Edge {
     uint32_t to;            // Destination node of the edge
     uint32_t reverse_edge;  // Index of the reverse edge in the 'to' node's adjacency list
-    int capacity;           // Maximum capacity of the edge
-    int flow;               // Current flow through the edge
+    capacity_t capacity;           // Maximum capacity of the edge
+    capacity_t flow;               // Current flow through the edge
 };
 
 namespace {
-constexpr void add_edge(vector<vector<Edge>>& adj, uint32_t u, uint32_t v, int capacity) {
+constexpr void add_edge(vector<vector<Edge>>& adj, uint32_t u, uint32_t v, capacity_t capacity) {
     adj[u].emplace_back(v, static_cast<uint32_t>(adj[v].size()), capacity, 0);
     adj[v].emplace_back(u, static_cast<uint32_t>(adj[u].size()) - 1, 0, 0);
 }
@@ -100,7 +101,7 @@ int64_t maxflow(uint32_t s, uint32_t t, size_t n, span<vector<Edge>> adj) {
 }
 
 int main() {
-    ios_base::sync_with_stdio(false);
+    ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
     size_t n;
@@ -151,10 +152,10 @@ int main() {
     size_t game_nodes_start = s + 1;
 
     // Pairs of teams excluding team 1
-    size_t num_game_nodes = (n - 1) * (n - 2) / 2;
+    size_t total_games = (n - 1) * (n - 2) / 2;
 
     // Where the teams-related nodes start (teams 2 to n)
-    size_t team_node_start = game_nodes_start + num_game_nodes;
+    size_t team_node_start = game_nodes_start + total_games;
 
     // Sink
     size_t t = team_node_start + n - 1;
@@ -170,7 +171,7 @@ int main() {
     // Creating game nodes and edges from source to game nodes and game nodes to team nodes
     for (size_t i = 2; i <= n; ++i) {
         for (size_t j = i + 1; j <= n; ++j) {
-            int gij = games[i, j];
+            auto gij = games[i, j];
             if (gij == 0)
                 continue;
 
@@ -198,7 +199,7 @@ int main() {
     }
 
     // Calculate the max flow from source to sink
-    int result = maxflow(s, t, node_count, adj);
+    auto result = maxflow(s, t, node_count, adj);
 
     // If the max flow equals the total number of games played between teams 2 to n,
     // it means all these games can be allocated without any team exceeding their victory limit
