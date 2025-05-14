@@ -1,0 +1,2 @@
+add_executable(hungarian_algorithm hungarian_algorithm.cpp)
+target_link_libraries(hungarian_algorithm PRIVATE mimalloc)
