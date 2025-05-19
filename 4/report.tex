@@ -1,0 +1,71 @@
+\documentclass[11pt]{article}
+\usepackage[
+    inner=3cm,
+    outer=2cm,
+    top=3cm,
+    bottom=2cm
+]{geometry}
+\usepackage[brazil]{babel}
+\usepackage{graphicx}
+\usepackage{fontspec}
+\usepackage{float}
+\setlength{\parskip}{10pt}
+\setmainfont{texgyreheros}[
+    UprightFont = *-regular,
+    BoldFont = *-bold,
+    ItalicFont = *-italic,
+    BoldItalicFont = *-bolditalic,
+    Extension = .otf
+]
+
+\title{Laboratório 4 — Emparelhamentos}
+\author{Eduardo Menges Mattje}
+
+\begin{document}
+\maketitle
+
+\section{Introdução}
+
+O algoritmo húngaro resolve problemas de emparelhamento para grafos bi-partidos ao buscar repetidamente por caminhos aumentantes de forma a tornar valores potenciais iguais à atribuição que minimiza (ou maximiza) a soma dos emparelhamentos.
+A forma de encontrar os caminhos aumentantes escolhida para esta implementação foi a de Johnson, que utiliza Dijkstra para encontrar os menores caminhos.
+
+\section{Detalhes de implementação}
+
+O algoritmo é iterativo, atribuindo um trabalho a um trabalhador a cada iteração.
+
+Há um trabalhador extra, que se liga a todos os trabalhos no começo das iterações e inicializa a pilha (implementada com std::priority\_queue) do Dijkstra.
+Então, para cada outro trabalhador, empilha com as distâncias atualizadas considerando seus potenciais (valores do dual) e a relaxação em relação ao trabalhador atual, somente se essa for menor do que a distância já existente.
+
+O Dijkstra se encerra ao encontrar o primeiro trabalhador que não possui trabalho associado.
+Então, os potenciais são atualizados e o custo é somado com este.
+
+A representação de grafos escolhida foi a de matriz de adjacência devido aos grafos de entrada serem presumidamente completos.
+
+\section{Ambiente de teste}
+
+A máquina de teste possui Linux Mint 22.1, processador Intel i5-12450H e 16GB de memória RAM.
+O compilador utilizado foi o GCC, versão 14.2, com todas as otimizações padrões habilitadas, e a implementação da biblioteca padrão do C++ é a libstdc++ versão 13.
+
+\section{Plano de teste}
+
+O gerador utilizado para gerar os grafos toma uma entrada $n$ e gera uma matriz $N \times N$ com valores no intervalo $[0, n \cdot n]$.
+Foram gerados e mensurados $10$ testes para cada $n$ pertencente ao intervalo $[1000, 18000]$, incrementando $1000$ a cada passo.
+
+\section{Resultados}
+
+\begin{figure}[H]
+    \centering
+    \caption{Tempo de execução em função de $n$}
+    \label{fig:n_time}
+    \includegraphics[width=0.8\linewidth]{graphs/n_time}
+\end{figure}
+
+Utilizando o algoritmo de Johnson para caminhos aumentantes, o algoritmo húngaro tem como complexidade $O(n(m+n \log n))$.
+Como o gerador gera matrizes quadradas, $n = m$, logo a complexidade é $O(n^2 + n^2 \log n)$.
+Uma regressão não linear com coeficientes $a$ e $b$ para esses termos cabe aos dados, conforme apontado na figura \ref{fig:n_time}.
+
+\section{Conclusão}
+
+Com essa mensuração, conseguimos observar que a complexidade teórica é respeitada.
+
+\end{document}

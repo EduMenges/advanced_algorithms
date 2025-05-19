@@ -5,6 +5,8 @@
       <option name="clangTidyChecks" value="-*,bugprone-*,concurrency-*,cppcoreguidelines-*,hicpp-*,modernize-*,openmp-*,performance-*,portability-*,readability-*,misc-*,-misc-const-correctness,-misc-confusable-identifiers" />
     </inspection_tool>
     <inspection_tool class="CppLocalVariableMayBeConst" enabled="false" level="HINT" enabled_by_default="false" />
+    <inspection_tool class="CppNonExplicitConvertingConstructor" enabled="false" level="HINT" enabled_by_default="false" />
     <inspection_tool class="CppParameterMayBeConst" enabled="false" level="HINT" enabled_by_default="false" />
+    <inspection_tool class="LatexUnicode" enabled="false" level="ERROR" enabled_by_default="false" />
   </profile>
 </component>
