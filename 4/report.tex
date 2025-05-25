@@ -9,6 +9,7 @@
 \usepackage{graphicx}
 \usepackage{fontspec}
 \usepackage{float}
+%\usepackage{listings}
 \setlength{\parskip}{10pt}
 \setmainfont{texgyreheros}[
     UprightFont = *-regular,
@@ -44,12 +45,13 @@ A representação de grafos escolhida foi a de matriz de adjacência devido aos 
 \section{Ambiente de teste}
 
 A máquina de teste possui Linux Mint 22.1, processador Intel i5-12450H e 16GB de memória RAM.
-O compilador utilizado foi o GCC, versão 14.2, com todas as otimizações padrões habilitadas, e a implementação da biblioteca padrão do C++ é a libstdc++ versão 13.
+O compilador utilizado foi o GCC, versão 14.2, com todas as otimizações padrões habilitadas, e a implementação da biblioteca padrão do C++ é a libstdc++ versão 14.
 
 \section{Plano de teste}
 
 O gerador utilizado para gerar os grafos toma uma entrada $n$ e gera uma matriz $N \times N$ com valores no intervalo $[0, n \cdot n]$.
-Foram gerados e mensurados $10$ testes para cada $n$ pertencente ao intervalo $[1000, 18000]$, incrementando $1000$ a cada passo.
+
+Foram gerados $10$ testes para cada $n$ pertencente ao intervalo $[1000, 20000]$, incrementando $1000$ a cada passo. Para cada teste, mensurou-se o tempo de execução.
 
 \section{Resultados}
 
