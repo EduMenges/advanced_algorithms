@@ -53,7 +53,7 @@ vector<int64_t> hungarian(const mdspan<Weight, dextents<size_t, 2>> C) {
                        greater<pair<int32_t, size_t>>>
             pq;
 
-        // Connect every job to the dummy worker
+        // Connect every worker to the current job
         for (size_t v = 0; v < W; ++v) {
             auto edge = C[j_cur, v] - h[v];
             dist[v] = edge;
@@ -139,7 +139,8 @@ int main() {
         }
     }
 
-    auto ans = hungarian(costs);
+    const auto ans = hungarian(costs);
+
     cout << ans[ans.size() - 1] << '\n';
 
     return 0;

@@ -1,47 +1,32 @@
 #!/usr/bin/env bash
-generator="/home/menges/repos/advanced_algorithms/cmake-build-gcc/bin/generator"
-target="/home/menges/repos/advanced_algorithms/cmake-build-gcc/bin/hungarian_algorithm"
+generator="../cmake-build-release/bin/Release/generator.exe"
+target="../cmake-build-release/bin/Release/hungarian_algorithm.exe"
 
 # Your commands here
 
 sizes=(
-    1000
-    2000
-    3000
-    4000
-    5000
-    6000
-    7000
-    8000
-    9000
-    10000
-    11000
-    12000
-    13000
-    14000
-    15000
-    16000
-    17000
-    18000
-    19000
-    20000
+  21000
+  22000
+  23000
+  24000
+  25000
+  26000
+  27000
+  28000
+  29000
+  30000
 )
 
-echo "n,time,result"
+echo "n,time,loop_iters,relaxations,heap_ops,result"
 
 for i in {1..10}; do
         for size in "${sizes[@]}"; do
         (
-            $generator $size >"tests/test_${size}"
-
-            start=$(date +%s%N)
+            $generator "$size" >"tests/test_${size}"
 
             result=$($target <"tests/test_${size}")
 
-            end=$(date +%s%N)
-            elapsed=$(((end - start) / 1000000))
-
-            echo "$size,$elapsed,$result"
+            echo "$size,$result"
         ) &
         done
     wait

@@ -9,7 +9,7 @@
 \usepackage{graphicx}
 \usepackage{fontspec}
 \usepackage{float}
-%\usepackage{listings}
+\usepackage{listings}
 \setlength{\parskip}{10pt}
 \setmainfont{texgyreheros}[
     UprightFont = *-regular,
@@ -18,6 +18,10 @@
     BoldItalicFont = *-bolditalic,
     Extension = .otf
 ]
+\lstset{
+	language=C++,
+	keepspaces=true
+}
 
 \title{Laboratório 4 — Emparelhamentos}
 \author{Eduardo Menges Mattje}
@@ -26,15 +30,15 @@
 \maketitle
 
 \section{Introdução}
-
 O algoritmo húngaro resolve problemas de emparelhamento para grafos bi-partidos ao buscar repetidamente por caminhos aumentantes de forma a tornar valores potenciais iguais à atribuição que minimiza (ou maximiza) a soma dos emparelhamentos.
 A forma de encontrar os caminhos aumentantes escolhida para esta implementação foi a de Johnson, que utiliza Dijkstra para encontrar os menores caminhos.
 
 \section{Detalhes de implementação}
+\label{sec:implementation-details}
 
-O algoritmo é iterativo, atribuindo um trabalho a um trabalhador a cada iteração.
+O algoritmo é iterativo, atribuindo um trabalho a um trabalhador a cada iteração, chegando, portanto, na solução somente na última iteração.
 
-Há um trabalhador extra, que se liga a todos os trabalhos no começo das iterações e inicializa a pilha (implementada com std::priority\_queue) do Dijkstra.
+Há um trabalhador extra, que se liga a todos os trabalhos no começo das iterações e inicializa a pilha (implementada com \lstinline|std::priority_queue|) do Dijkstra.
 Então, para cada outro trabalhador, empilha com as distâncias atualizadas considerando seus potenciais (valores do dual) e a relaxação em relação ao trabalhador atual, somente se essa for menor do que a distância já existente.
 
 O Dijkstra se encerra ao encontrar o primeiro trabalhador que não possui trabalho associado.
@@ -44,16 +48,26 @@ A representação de grafos escolhida foi a de matriz de adjacência devido aos 
 
 \section{Ambiente de teste}
 
-A máquina de teste possui Linux Mint 22.1, processador Intel i5-12450H e 16GB de memória RAM.
-O compilador utilizado foi o GCC, versão 14.2, com todas as otimizações padrões habilitadas, e a implementação da biblioteca padrão do C++ é a libstdc++ versão 14.
+A máquina de teste possui Windows 11, um processador AMD Ryzen 5 7600X e 32 GB de memória RAM. O compilador utilizado foi o Clang, versão 19.1.5, com todas as otimizações padrões habilitadas e utilizando a especificação do C++ 23.
 
 \section{Plano de teste}
 
-O gerador utilizado para gerar os grafos toma uma entrada $n$ e gera uma matriz $N \times N$ com valores no intervalo $[0, n \cdot n]$.
+O gerador utilizado para gerar os grafos toma uma entrada $n$ e gera uma matriz de tamanho $n \times n$ com valores uniformemente distribuídos no intervalo $[0, n \cdot n]$.
 
-Foram gerados $10$ testes para cada $n$ pertencente ao intervalo $[1000, 20000]$, incrementando $1000$ a cada passo. Para cada teste, mensurou-se o tempo de execução.
+Foram gerados $10$ testes para cada $n$ pertencente ao intervalo $[1000, 20000]$, incrementando $1000$ a cada passo. Para cada teste, mensurou-se:
+
+\begin{itemize}
+
+\item o tempo de execução;
+\item o número de iterações do laço principal;
+\item a quantidade de operações do heap;
+\item a quantidade de relaxações realizadas.
+
+\end{itemize}
 
 \section{Resultados}
+
+\subsection{Tempo de execução}
 
 \begin{figure}[H]
     \centering
@@ -62,12 +76,51 @@ Foram gerados $10$ testes para cada $n$ pertencente ao intervalo $[1000, 20000]$
     \includegraphics[width=0.8\linewidth]{graphs/n_time}
 \end{figure}
 
-Utilizando o algoritmo de Johnson para caminhos aumentantes, o algoritmo húngaro tem como complexidade $O(n(m+n \log n))$.
-Como o gerador gera matrizes quadradas, $n = m$, logo a complexidade é $O(n^2 + n^2 \log n)$.
-Uma regressão não linear com coeficientes $a$ e $b$ para esses termos cabe aos dados, conforme apontado na figura \ref{fig:n_time}.
+Utilizando o algoritmo de Johnson para caminhos aumentantes, o algoritmo húngaro tem como complexidade $O(n(m + n \log n))$.
+Como o gerador gera matrizes quadradas, $m = n^2$, logo a complexidade esperada é $O(n^3 + n^2 \log n)$.
+Uma regressão para a equação $an^3 + bn^2 \log n$ cabe aos dados, conforme apontado na figura \ref{fig:n_time}, tendo o coeficiente $R^2 = 0,9987$ muito próximo de 1.
+
+\subsection{Laço principal}
+
+\begin{figure}[H]
+	\centering
+	\caption{Iterações no laço principal em relação a $n$}
+	\label{fig:main_loop}
+	\includegraphics[width=0.8\linewidth]{graphs/main_loop}
+\end{figure}
+
+Devido à implementação iterativa do algoritmo, o crescimento das iterações no laço principal ocorre de maneira linear a $n$, conforme esperado.
+
+\subsection{Operações no heap}
+\label{sec:heap_ops}
+
+\begin{figure}[H]
+	\centering
+	\caption{Operações no heap em função de $n$}
+	\label{fig:heap_ops}
+	\includegraphics[width=0.8\linewidth]{graphs/heap_ops}
+\end{figure}
+
+Conforme discutido em \ref{sec:implementation-details}, o Dijkstra para ao encontrar o primeiro trabalhador livre, e na $k$-ésima iteração, há $n - k + 1$ trabalhadores livres.
+Desta forma, o número esperado de operações \lstinline|pop()| até encontrarmos o primeiro trabalhador livre é $\frac{n}{n - k + 1}$, o que, nas primeiras 50\% das iterações é $<= 2$, e mesmo nos 10\% finais o valor é $<= 10$, o que seria um tempo constante $\Theta(1)$.
+
+Como percorremos todos os outros $n$ vizinhos no processo de relaxação, e como cada relaxação pode gerar um \lstinline|push()| no heap, temos $O(n)$ operações no heap.
+Por fim, o laço principal do algoritmo faz $O(n^2)$ operações no heap, conforme observado nos dados coletados.
+
+\subsection{Relaxações}
+
+\begin{figure}[H]
+\centering
+\caption{Relaxações bem-sucedidas em função de $n$}
+\label{fig:relaxations}
+\includegraphics[width=0.8\linewidth]{graphs/relaxations}
+\end{figure}
+
+As relaxações são contadas somente quando bem-sucedidas ou seja, se realmente melhoram a distância, e só ocorrem caso o primeiro \lstinline|pop()| não ocorra com um trabalhador livre. Seguindo um raciocínio parecido com o item \ref{sec:heap_ops}, sabemos que a probabilidade de isso ocorrer é baixa, e cada vez que ocorre são realizadas no máximo $n$ relaxações.
+Deste modo, $O(1) * O(n) = O(n)$, e contando as iterações do laço principal temos $O(n^2)$.
 
 \section{Conclusão}
 
-Com essa mensuração, conseguimos observar que a complexidade teórica é respeitada.
+Com essa mensuração e os testes com matrizes quadradas, conseguimos observar que a complexidade teórica é respeitada para o caso médio, o que é reforçado pelos testes de regressão realizados e a probabilidade de emparelhamento dos trabalhadores livres.
 
 \end{document}
