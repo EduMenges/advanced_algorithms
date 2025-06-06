@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cassert>
+#include <chrono>
 #include <cstdint>
 #include <iostream>
 #include <random>
@@ -10,32 +11,31 @@
 
 using namespace std;
 
-uint64_t knapsack_dp(span<const uint16_t> weights,
-                     span<const uint16_t> values,
-                     const uint64_t capacity) {
+pair<uint64_t, uint64_t> knapsack_dp(span<const uint16_t> weights,
+                                     span<const uint16_t> values,
+                                     const uint64_t capacity) {
     assert(weights.size() == values.size());
 
     auto n = weights.size();
 
-    vector<uint64_t> curr(capacity + 1), prev(capacity + 1);
+    vector<uint64_t> prev(capacity + 1);
+    uint64_t updates = 0;
 
     for (size_t i = 0; i <= n; ++i) {
-        for (uint64_t w = 0; w <= capacity; ++w) {
+        for (int64_t w = capacity; w >= 0; --w) {
             if (weights[i] <= w) {
-                curr[w] = max(prev[w], prev[w - weights[i]] + values[i]);
-            } else {
-                curr[w] = prev[w];
+                prev[w] = max(prev[w], prev[w - weights[i]] + values[i]);
+                updates += 1;
             }
         }
-        swap(curr, prev);
     }
 
-    return curr[capacity];
+    return {prev[capacity], updates};
 }
 
-uint64_t knapsack_hexu(span<const uint16_t> weights,
-                       span<const uint16_t> values,
-                       uint64_t capacity) {
+pair<uint64_t, uint64_t> knapsack_hexu(span<const uint16_t> weights,
+                                       span<const uint16_t> values,
+                                       uint64_t capacity) {
     assert(weights.size() > 0);
     assert(weights.size() == values.size());
 
@@ -53,6 +53,8 @@ uint64_t knapsack_hexu(span<const uint16_t> weights,
     vector<int64_t> prev(capacity + 1, NEG_INF);
     prev[0] = 0;
 
+    uint64_t updates = 0;
+
     for (uint64_t pos = 0; pos < n; ++pos) {
         auto i = pos + 1;
         auto id = order[pos];
@@ -69,12 +71,13 @@ uint64_t knapsack_hexu(span<const uint16_t> weights,
             if (prev[j - wi] != NEG_INF) {
                 if (auto potential = prev[j - wi] + pi; prev[j] < potential) {
                     prev[j] = potential;
+                    updates += 1;
                 }
             }
         }
     }
 
-    return static_cast<uint64_t>(*ranges::max_element(prev));
+    return {static_cast<uint64_t>(*ranges::max_element(prev)), updates};
 }
 
 int main() {
@@ -97,8 +100,22 @@ int main() {
         cin >> weights[i];
     }
 
-    // vector<uint16_t> weights = {3, 4, 7, 8, 9};
-    // vector<uint16_t> values = {4, 5, 10, 11, 13};
+    auto start = chrono::steady_clock::now();
 
-    cout << knapsack_hexu(weights, values, capacity) << '\n';
+    auto [result_dp, updates_dp] = knapsack_dp(weights, values, capacity);
+
+    auto now = chrono::steady_clock::now();
+    auto time_dp =
+        chrono::duration_cast<chrono::milliseconds>(chrono::duration(now - start)).count();
+
+    start = chrono::steady_clock::now();
+
+    auto [result_hexu, updates_hexu] = knapsack_hexu(weights, values, capacity);
+
+    now = chrono::steady_clock::now();
+    auto time_hexu =
+        chrono::duration_cast<chrono::milliseconds>(chrono::duration(now - start)).count();
+
+    cout << result_dp << ',' << time_dp << ',' << updates_dp << ',' << result_dp << ',' << time_hexu
+         << ',' << updates_hexu << '\n';
 }
