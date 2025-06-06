@@ -6,7 +6,6 @@
 #include <random>
 #include <ranges>
 #include <span>
-#include <unordered_map>
 #include <vector>
 
 using namespace std;
@@ -116,6 +115,6 @@ int main() {
     auto time_hexu =
         chrono::duration_cast<chrono::milliseconds>(chrono::duration(now - start)).count();
 
-    cout << result_dp << ',' << time_dp << ',' << updates_dp << ',' << result_dp << ',' << time_hexu
+    cout << result_dp << ',' << time_dp << ',' << updates_dp << ',' << result_hexu << ',' << time_hexu
          << ',' << updates_hexu << '\n';
 }
