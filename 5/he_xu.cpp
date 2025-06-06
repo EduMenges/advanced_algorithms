@@ -62,22 +62,16 @@ uint64_t knapsack_hexu(span<const uint16_t> weights,
         double mu = static_cast<double>(i) / static_cast<double>(n) * static_cast<double>(capacity);
         double delta = 2.0 * std::sqrt(i) * static_cast<double>(w_max);
 
-        auto low = static_cast<uint64_t>(std::max(mu - delta, 0.0));
+        auto low = static_cast<int64_t>(std::max(mu - delta, 0.0));
         auto high = std::min(capacity, static_cast<uint64_t>(std::ceil(mu) + delta));
 
-        vector curr(prev);
-
-        for (uint64_t j = low; j <= high; ++j) {
-            auto best = prev[j];
-
+        for (int64_t j = high; j >= low; --j) {
             if (j >= wi && prev[j - wi] != NEG_INF) {
-                best = std::max(best, prev[j - wi] + pi);
+                if (auto potential = prev[j - wi] + pi; prev[j] < potential) {
+                    prev[j] = potential;
+                }
             }
-
-            curr[j] = best;
         }
-
-        prev = std::move(curr);
     }
 
     return static_cast<uint64_t>(*ranges::max_element(prev));
