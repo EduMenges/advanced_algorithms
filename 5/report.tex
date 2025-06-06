@@ -1,0 +1,77 @@
+\documentclass[11pt]{article}
+\usepackage[
+    inner=3cm,
+    outer=2cm,
+    top=3cm,
+    bottom=2cm
+]{geometry}
+\usepackage[brazil]{babel}
+\usepackage{graphicx}
+\usepackage{fontspec}
+\usepackage{float}
+\usepackage{listings}
+\setlength{\parskip}{10pt}
+\setmainfont{texgyreheros}[
+    UprightFont = *-regular,
+    BoldFont = *-bold,
+    ItalicFont = *-italic,
+    BoldItalicFont = *-bolditalic,
+    Extension = .otf
+]
+\lstset{
+    language=C++,
+    keepspaces=true
+}
+
+\title{Laboratório 4 — Emparelhamentos}
+\author{Eduardo Menges Mattje}
+
+\begin{document}
+    \maketitle
+
+
+    \section{Introdução}
+    O problema da mochila 0-1 consiste em escolher um subconjunto de elementos com atributos de pesos e valores de forma a maximizar o valor total do subconjunto enquanto mantiver o peso total dentro de uma certa capacidade.
+
+    O algoritmo clássico para resolvê-lo usa programação dinâmica (PD) e possui complexidade $O(nW)$, onde $n$ é o número de elementos e $W$ é a capacidade máxima da mochila.
+
+    O algoritmo proposto por He e Xu o resolve em $Õ(n^{1.5}w_{max})$, onde $w_{max}$ é o peso máximo dos elementos da entrada.
+    Ele funciona de maneira similar ao algoritmo clássico de programação dinâmica, porém com otimizações devido aos possíveis cortes com a permutação de distribuição normal nos valores da entrada, o que drasticamente reduz a quantidade de atualizações realizadas.
+
+
+    \section{Detalhes de implementação}
+    \label{sec:implementation-details}
+
+    Ambos algoritmos foram otimizados de forma a ter sua complexidade espacial igual a $O(n)$, através do método de iteração ao contrário.
+
+
+    \section{Ambiente de teste}
+
+    A máquina de teste possui Windows 11, um processador AMD Ryzen 5 7600X e 32 GB de memória RAM. O compilador utilizado foi o Clang, versão 19.1.5, com todas as otimizações padrões habilitadas e utilizando a especificação do C++ 23.
+
+
+    \section{Plano de teste}
+
+    Tanto a complexidade do PD quanto a do He\&Xu dependem do número de elementos $n$, assim é prudente variá-lo enquanto mantemos as outras variáveis do cálculo da complexidade constantes.
+    Para isso, o $n$ varia em $[1000, 20000]$, incrementando $1000$ a cada passo, mantendo o peso máximo fixado em $255$ a capacidade da mochila fixada em $2550000$ (a metade o maior possível valor do extremo do intervalo).
+    Cada valor de $n$ nesse conjunto foi amostrado $5$ vezes.
+
+    A complexidade do PD depende de $W$, e para avaliá-la fixou-se $n$ em $10000$ e a capacidade variou em $[1000, 20000]$, incrementando $1000$ a cada passo, amostrando $5$ vezes por valor desse conjunto.
+
+    Já a complexidade do He\&Xu depende do peso máximo encontrado no conjunto de entrada, e para avaliá-lo fixou-se $n$ em $10000$, a capacidade em $5000000$ e o $w_{max}$ variou em $[200, 2000]$, amostrando $5$ vezes por valor.
+
+    O gerador de testes toma uma entrada $n$, $W$ e $w_{max}$, gerando o conjunto de pesos e valores na saída padrão conforme a convenção estabelecida pelo professor.
+
+
+    \section{Resultados}
+
+    \subsection{Variação de $n$}
+
+    \subsection{Variação de $W$}
+
+    \subsection{Variação de $w_{max}$}
+
+
+    \section{Conclusão}
+
+\end{document}
