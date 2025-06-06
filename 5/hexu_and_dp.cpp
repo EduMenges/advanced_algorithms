@@ -3,6 +3,7 @@
 #include <chrono>
 #include <cstdint>
 #include <iostream>
+#include <numeric>
 #include <random>
 #include <ranges>
 #include <span>

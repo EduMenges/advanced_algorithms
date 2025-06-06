@@ -23,7 +23,7 @@ jobs:
           submodules: "recursive"
 
       - name: Configure CMake
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Release ${{matrix.cmake_config_settings}}
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
 
       - name: Build project
         run: cmake --build build --config Release -j
