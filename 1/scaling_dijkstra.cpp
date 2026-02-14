@@ -1,5 +1,5 @@
-#include "mimalloc-new-delete.h"
 #include "dijkstra.hpp"
+#include "mimalloc-new-delete.h"
 
 #include <chrono>
 #include <iostream>

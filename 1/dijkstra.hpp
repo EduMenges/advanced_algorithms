@@ -7,8 +7,9 @@
 using ListItem = std::pair<uint32_t, uint16_t>;
 using Graph = std::vector<std::vector<std::pair<uint32_t, uint16_t>>>;
 
-template <size_t K> class MinHeap {
-  public:
+template <size_t K>
+class MinHeap {
+   public:
     constexpr explicit MinHeap(size_t max_nodes) : node_indexes(max_nodes, UINT32_MAX) {}
 
     [[nodiscard]] constexpr bool empty() const { return heap.empty(); }
@@ -45,7 +46,7 @@ template <size_t K> class MinHeap {
     size_t sift_down_count = 0;
     size_t sift_up_count = 0;
 
-  private:
+   private:
     constexpr void sift_down(size_t index) {
         using namespace std;
 
@@ -102,7 +103,8 @@ struct Result {
     size_t sift_down = 0;
 };
 
-template <size_t K> Result dijkstra(const Graph &graph, uint32_t origin, uint32_t destination) {
+template <size_t K>
+Result dijkstra(const Graph& graph, uint32_t origin, uint32_t destination) {
     using namespace std;
 
     auto n = graph.size();

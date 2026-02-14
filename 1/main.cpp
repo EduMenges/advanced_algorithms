@@ -1,11 +1,11 @@
-#include "dijkstra.hpp"
 #include <iostream>
 #include <sstream>
 #include <string>
+#include "dijkstra.hpp"
 
 using namespace std;
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
     if (argc < 3) {
         cerr << "Usage: dijkstra <origin> <destination>\n";
         return EXIT_FAILURE;
@@ -36,8 +36,6 @@ int main(int argc, char *argv[]) {
             graph[o].emplace_back(d, w);
         }
     }
-
-
 
     auto result = dijkstra<2>(graph, origin, destination);
 
